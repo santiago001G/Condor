@@ -1,0 +1,128 @@
+﻿@page "/venta/inicio"
+@inject NavigationManager navigator
+@inject IRepositorio repositorio
+
+@if (MostrarBotones)
+{
+    <div class="container section">
+        <div class="is-justify-content-center is-align-items-center">
+            <h1 class="title is-5 has-text-white"> Registro de venta</h1>
+            <div class="buttons is-flex is-flex-wrap-nowrap">
+                <button class="button is-primary" type="button" @onclick="HabilitarBusquedaCliente">
+                    <span class="icon">
+                        <i class="fas fa-check"></i>
+                    </span>
+                    <span>Cliente Antiguo</span>
+                </button>
+                <button class="button is-info" type="button" @onclick="IrCrearCliente">
+                    <span class="icon">
+                        <i class="fas fa-plus"></i>
+                    </span>
+                    <span>Cliente Nuevo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="container section">
+        <div class="field">
+            <label class="label has-text-light is-justify-content-center">Filtro</label>
+            <div class="control">
+                <div class="select is-fullwidth">
+                    <select @bind="parametroBusqueda">
+                        <option value="Nombre">Nombre</option>
+                        <option value="Codigo">Código</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="field has-addons has-addons-right mt-5 is-justify-content-center">
+            <p class="control" style="width:100%;">
+                <input class="input" type="text" @bind-value="valorBusquedaCliente">
+            </p>
+            <p class="control">
+                <a class="button is-primary" @onclick="ConsultarCliente">
+                    Buscar
+                </a>
+            </p>
+        </div>
+
+        <ListadoGenerico Listado="ClientesEncontrados">
+            <HayRegistros>
+                <div class="card-busqueda-cliente mt-5">
+                    <div class="card-busqueda-cliente-info">
+                        <span class="has-text-light">COD: @context.Id</span>
+                        <span class="has-text-light has-text-weight-semibold">@context.Nombre</span>
+                        <span class="has-text-light">Tel: @context.Telefono</span>
+                        <span class="has-text-light">Dir: @context.Direccion</span>
+                    </div>
+                    <div class="card-busqueda-cliente-icon is-flex is-justify-content-center is-align-items-center" @onclick="(()=> IrRegistrarVenta(context.Id))">
+                        <i class="fas fa-tags fa-2x has-text-primary is-clickable"></i>
+                    </div>
+                </div>
+            </HayRegistros>
+            <NoHayRegistros>
+                <h1 class="title is-5 has-text-white">No hay clientes para mostrar</h1>
+            </NoHayRegistros>
+        </ListadoGenerico>
+    </div>
+}
+
+@code {
+    private List<ClienteDto> ClientesEncontrados = new List<ClienteDto>();
+    private bool MostrarBotones = true;
+    private string parametroBusqueda { get; set; }
+    string valorBusquedaCliente = "";
+
+    private void IrCrearCliente()
+    {
+        navigator.NavigateTo("/cliente/crear");
+    }
+
+    private void IrRegistrarVenta(int idCliente)
+    {
+        navigator.NavigateTo($"/venta/registrar/{idCliente}");
+    }
+
+    private void HabilitarBusquedaCliente()
+    {
+        MostrarBotones = false;
+    }
+
+    private async Task ConsultarCliente()
+    {
+        ClientesEncontrados = new List<ClienteDto>();
+        if (parametroBusqueda == "Nombre")
+        {
+            var responseHttp = await repositorio.Get<IEnumerable<ClienteDto>>($"api/clientes/clientePorNombre/{valorBusquedaCliente}");
+            if (!responseHttp.Error)
+            {
+                foreach (var item in responseHttp.Response)
+                {
+                    Console.WriteLine(item.Nombre);
+                }
+
+                ClientesEncontrados.AddRange(responseHttp.Response);
+            }
+        }
+        else
+        {
+            if (Int32.TryParse(valorBusquedaCliente, out int id))
+            {
+                var responseHttp = await repositorio.Get<ClienteDto>($"api/clientes/{id}");
+
+                if (!responseHttp.Error)
+                {
+                    var resultadoRespuesta = responseHttp.Response;
+                    if(resultadoRespuesta !=null)
+                    {
+                        ClientesEncontrados.Add(responseHttp.Response);
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,339 @@
+﻿body {
+    background-color: #17171A;
+    width: 100%;
+    min-height: 100vh;
+}
+
+input[type=number] {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+}
+
+.tarjeta-acceso {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1.3fr 0.7fr;
+    gap: 0px 0px;
+    grid-template-areas:
+        "icon-area"
+        "text-area";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    border-radius: 12px;
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    background: #272727;
+    color: #00947E;
+    cursor: pointer;
+    position: relative;
+    padding: 10px 10px 10px 10px;
+}
+
+    .tarjeta-acceso a {
+        position:absolute;
+        width:120px;
+        height:120px;
+    }
+
+.icon-area {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    grid-area: icon-area;
+}
+
+.text-area {
+    display: flex;
+    text-align: center;
+    grid-area: text-area;
+    font-weight: bold;
+    justify-content: center;
+}
+
+.separador-menus-index {
+    display: flex;
+    margin-top: 30px;
+    margin-bottom: 30px;
+    height: 30px;
+    border-radius: 20px;
+    box-shadow: 0px 0px 2px rgba(0, 0, 0, 0.25);
+    background: #272727;
+    border: 1px solid #272727;
+    color: rgba(255, 255, 255, 0.92);
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+    padding: 5px;
+}
+
+
+/*Tarjeta de la lista de clientes por cobrar*/
+
+.tarjeta-cobro-contenedor {
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.tarjeta-cobro-cliente {
+    width: 85%;
+    height: 75px;
+    background: #1E1E1E;
+    display: grid;
+    grid-template-columns: 0.4fr 2.2fr 0.4fr;
+    grid-template-rows: 1.1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "tarjeta-cliente-indicador tarjeta-info-cliente tarjeta-cliente-cuota";
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    border-radius: 10px;
+    z-index: 1;
+}
+
+.tarjeta-info-cliente {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "tarjeta-cliente-nombre tarjeta-cliente-nombre tarjeta-cliente-nombre"
+        "tarjeta-cliente-estado tarjeta-cliente-estado tarjeta-cliente-estado"
+        "tarjeta-cliente-nuevo tarjeta-cliente-nuevo tarjeta-cliente-nuevo";
+    grid-area: tarjeta-info-cliente;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    cursor: pointer;
+}
+
+.tarjeta-cliente-nombre {
+    grid-area: tarjeta-cliente-nombre;
+    font-weight: 600;
+}
+
+.tarjeta-cliente-estado {
+    grid-area: tarjeta-cliente-estado;
+    color: #DBDBDB;
+}
+
+.tarjeta-cliente-nuevo {
+    grid-area: tarjeta-cliente-nuevo;
+}
+
+.tarjeta-cliente-indicador {
+    grid-area: tarjeta-cliente-indicador;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.tarjeta-cliente-cuota {
+    grid-area: tarjeta-cliente-cuota;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    color: white;
+}
+
+.circulo-estado-cobro {
+    border-radius: 50%;
+    width: 23px;
+    height: 23px;
+}
+
+    .circulo-estado-cobro.pendiente {
+        background: #F08C8C;
+    }
+
+    .circulo-estado-cobro.cobrado {
+        background: #63b162;
+    }
+
+.tarjeta-cliente-contenedor-botones {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-template-areas:
+        ". . . .";
+    width: 85%;
+    height: 75px;
+    background: #2E2E2E;
+    border-radius: 10px;
+    margin-top: -14px;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    justify-items: center;
+    padding-top: 10px;
+}
+
+    .tarjeta-cliente-contenedor-botones button {
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        border: none;
+        box-shadow: 0px 1px 5px 0px #121212;
+        background: #383838;
+        color: white;
+        cursor: pointer;
+    }
+
+    .tarjeta-cliente-contenedor-botones.visible {
+        display: grid;
+        box-shadow: 0px 0px 5px #101010 inset;
+    }
+
+    /*Tarjeta de información de los productos del cliente*/
+
+.card-gestion-cobro {
+    background: #383838;
+    width: 100px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 5px;
+    flex-direction: column;
+}
+
+.alinear-centro {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+}
+
+.card-info-producto-cliente {
+    margin-top: 5px;
+    margin-bottom: 25px;
+    display: grid;
+    grid-template-columns: 1.4fr 0.6fr;
+    grid-template-rows: 0.5fr 1.9fr 0.6fr;
+    gap: 0px 0px;
+    grid-template-areas:
+        ". ."
+        ". ."
+        ". .";
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    height: 85px;
+    background: #1E1E1E;
+    border-radius: 10px;
+    padding-left: 10px;
+}
+
+/*Card aviso cliente cobrado*/
+
+.card-cliente-cobrado {
+    display: grid;
+    grid-template-columns: 0.7fr 2.3fr 0.5fr 0.5fr;
+    grid-template-rows: 1fr;
+    gap: 0px 3px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        ". . . .";
+    height: 85px;
+    background: #1E1E1E;
+    border-radius: 10px;
+    padding-left: 10px;
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    margin-top: 5px;
+    margin-bottom: 25px;
+    justify-content: center;
+    align-items: center;
+}
+
+/*MODAL DE REGISTRO DE MONTO*/
+
+.modal-formulario {
+    opacity:0;
+    display:none;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    float: right;
+    position: fixed;
+    background-color: rgba(53, 69, 73, 0.63);
+}
+
+.contenido-modal {
+    background: grey;
+    border-radius: 20px;
+    width: 80%;
+    position: relative;
+    top: 15%;
+}
+
+/*Clases auxiliares*/
+
+.texto-clicleable {
+    text-decoration: underline;
+    cursor:pointer;
+}
+.elemento-cliecleable {
+    cursor: pointer;
+}
+
+
+/*Estilos del registro de venta*/
+
+.card-resumen-venta {
+    display: grid;
+    grid-template-columns: 1.5fr 0.5fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        ". card-resumen-venta-icono"
+        ". card-resumen-venta-icono"
+        ". card-resumen-venta-icono";
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    background: #1E1E1E;
+    border-radius: 10px;
+    padding-left: 10px;
+}
+
+.card-resumen-venta-icono {
+    grid-area: card-resumen-venta-icono;
+}
+
+.caja-info-pago-total {
+    border-radius: 5px;
+    border: 1px solid #00947E;
+}
+
+.card-busqueda-cliente {
+    display: grid;
+    grid-template-columns: 1.7fr 0.3fr;
+    grid-template-rows: 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    box-shadow: 0px 0px 0.9px rgb(0 0 0 / 0%), 0px 0px 7px rgb(0 0 0 / 42%);
+    background: #1E1E1E;
+    border-radius: 10px;
+    padding-left: 10px;
+}
+
+.card-busqueda-cliente-info {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 0px 0px;
+    grid-auto-flow: row;
+    grid-template-areas:
+        "."
+        "."
+        ".";
+    grid-area: 1 / 1 / 2 / 3;
+}
+
+.card-busqueda-cliente-icon {
+    grid-area: 1 / 2 / 2 / 3;
+}

@@ -1,0 +1,91 @@
+﻿@inject NavigationManager navigation
+@inject IJSRuntime Js;
+@inject SweetAlertService Swal;
+
+<div class="tarjeta-cobro-contenedor">
+    <div class="tarjeta-cobro-cliente" @onclick="cambiarVisibilidadBotones">
+        <div class="tarjeta-cliente-indicador">
+            <div class="circulo-estado-cobro @ClaseEstado"></div>
+        </div>
+        <div class="tarjeta-info-cliente">
+            <div class="tarjeta-cliente-nombre">
+                <span>@Cliente.Nombre</span>
+            </div>
+            <div class="tarjeta-cliente-estado">
+                <span>Estado: @Cliente.EstadoPagos</span>
+            </div>
+            <div class="tarjeta-cliente-nuevo"></div>
+        </div>
+        <div class="tarjeta-cliente-cuota">
+            <span>$ @Cliente.ValorCuota</span>
+        </div>
+    </div>
+    <div class="tarjeta-cliente-contenedor-botones  @claseVisible">
+        <button @onclick="MostrarInfoCliente">
+            <span>
+                <i class="fas fa-info"></i>
+            </span>
+        </button>
+        <button>
+            <span>
+                <i class="fas fa-map-marker-alt"></i>
+            </span>
+        </button>
+        <button @onclick="IrCobrarCliente">
+            <span>
+                <i class="fas fa-dollar-sign"></i>
+            </span>
+        </button>
+        <button @onclick="LlamarCliente">
+            <span>
+                <i class="fas fa-phone-alt"></i>
+            </span>
+        </button>
+    </div>
+</div>
+
+@code {
+
+    [Parameter] public ClienteDto Cliente { get; set; }
+    private string ClaseEstado = "";
+    private string claseVisible = "";
+
+    protected override void OnInitialized()
+    {
+        ClaseEstado = Cliente.PagadoHoy ? "cobrado" : "pendiente";
+    }
+
+    void cambiarVisibilidadBotones()
+    {
+        if (claseVisible == "visible")
+        {
+            claseVisible = "";
+        }
+        else
+        {
+            claseVisible = "visible";
+        }
+    }
+
+    private void IrCobrarCliente()
+    {
+        navigation.NavigateTo($"/cobro/GestionarCliente/{Cliente.Id}");
+    }
+
+    private async void LlamarCliente()
+    {
+        await Js.InvokeVoidAsync("open", $"tel:{Cliente.Telefono}", "_blank");
+    }
+
+    private async void MostrarInfoCliente()
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = $"{Cliente.Nombre}",
+                Html = $"<table><tr><td><b>Periodicidad Cobro:</b></td><td>{Cliente.PeridicidadCobro}</td></tr><tr><td><b>Dirección:</b></td><td>{Cliente.Direccion}</td></tr><tr><td><b>Telefono:</b></td><td>{Cliente.Telefono}</td></tr><tr><td><b>Anotaciones:</b></td><td>{Cliente.Descripcion}</td></tr></table>",
+                Icon = SweetAlertIcon.Info,
+                CancelButtonText = "Cerrar"
+            });
+    }
+
+}

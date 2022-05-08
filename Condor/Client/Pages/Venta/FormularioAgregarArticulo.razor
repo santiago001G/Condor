@@ -1,0 +1,93 @@
+﻿<div class="field">
+    <label class="label has-text-light">Categoría Mercadería</label>
+    <div class="control">
+        <div class="select is-fullwidth">
+            <select class="select" onchange="@CambioCategoriaArticulo">
+                <option value="0">--SELECCIONE--</option>
+                @foreach (var categoria in Categorias)
+                {
+                    <option value="@categoria.Id">@categoria.Nombre</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+<div class="field">
+    <label class="label has-text-light">Artículo</label>
+    <div class="control">
+        <div class="select is-fullwidth">
+            <select class="select" @bind="@IdMercaderia">
+                <option value="0">--SELECCIONE--</option>
+                @foreach (var producto in MercaderiasDesplegable)
+                {
+                    <option value="@producto.Id">@producto.Nombre</option>
+                }
+            </select>
+        </div>
+    </div>
+</div>
+<div class="field">
+    <label class="label has-text-light">Cantidad</label>
+    <div class="field has-addons is-justify-content-center">
+        <p class="control">
+            <a class="button is-danger" @onclick="ReducirCantidad">
+                -
+            </a>
+        </p>
+        <p class="control">
+            <input class="input" type="number" @bind-value="Cantidad" readonly>
+        </p>
+        <p class="control">
+            <a class="button is-primary" @onclick="(()=> Cantidad++)">
+                +
+            </a>
+        </p>
+    </div>
+</div>
+
+<button class="button is-info is-pulled-right mt-4" type="button" @onclick="Agregar" disabled="@isDisable">Agregar</button>
+
+@code {
+    [Parameter] public List<CategoriaMercaderiaDTO> Categorias { get; set; }
+    [Parameter] public List<MercaderiaDto> Mercaderias { get; set; }
+    [Parameter] public EventCallback<(int, int)> AgregarItem { get; set; }
+
+    public List<MercaderiaDto> MercaderiasDesplegable = new List<MercaderiaDto>();
+
+    public int IdMercaderia { get; set; }
+    public int Cantidad { get; set; }
+    private bool isDisable = false;
+    private int valorSelectCategoria = default(int);
+
+    private async Task Agregar()
+    {
+        isDisable = true;
+        await AgregarItem.InvokeAsync((IdMercaderia, Cantidad));
+        Cantidad = default(int);
+        IdMercaderia = default(int);
+        isDisable = false;
+    }
+
+    private void ReducirCantidad()
+    {
+        if ((Cantidad - 1) > default(int))
+        {
+            Cantidad--;
+        }
+    }
+
+    void CambioCategoriaArticulo(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value.ToString(), out int id))
+        {
+            e.Value = default(int);
+            IdMercaderia = default(int);
+            MercaderiasDesplegable = new List<MercaderiaDto>();
+            if (id > default(int))
+            {
+                Console.WriteLine(id);
+                MercaderiasDesplegable = Mercaderias.Where(x => x.IdCategoria == id).ToList();
+            }
+        }
+    }
+}

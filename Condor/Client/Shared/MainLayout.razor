@@ -1,0 +1,36 @@
+﻿@inherits LayoutComponentBase
+
+<LoadingScreen></LoadingScreen>
+<div class="app">
+    <main>
+        <header>
+            <nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);">
+                <div class="navbar-brand">
+                    <a class="navbar-item" href="">
+                        <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28">
+                    </a>
+
+                    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                        <span aria-hidden="true"></span>
+                    </a>
+                </div>
+                <div id="navbarBasicExample" class="navbar-menu">
+                    <div class="navbar-start">
+                        <a class="navbar-item">
+                            Home
+                        </a>
+
+                        <a class="navbar-item">
+                            Documentation
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </header>
+        <article class="container">
+            @Body
+        </article>
+    </main>
+</div>

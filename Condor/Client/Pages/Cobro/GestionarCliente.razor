@@ -1,0 +1,362 @@
+﻿    @page "/cobro/gestionarCliente/{IdCliente:int}"
+@inject IRepositorio repositorio;
+@inject SweetAlertService Swal;
+@inject NavigationManager navigator;
+
+<div class="section container">
+    <div class="columns is-mobile">
+        <div class="column">
+            <h1 class="title is-5 has-text-white">@Cliente.Nombre</h1>
+        </div>
+    </div>
+    <div class="columns is-mobile">
+        <div class="column">
+            <h2 class="subtitle is-6 has-text-light">@Cliente.PeridicidadCobro</h2>
+        </div>
+    </div>
+    <div class="columns is-mobile">
+        <div class="column p-0">
+            <div class="card-gestion-cobro">
+                <span class="has-text-primary">Deuda Total</span>
+                <span class="has-text-white">$ @DeudaTotal</span>
+            </div>
+        </div>
+        <div class="column p-0">
+            <div class="card-gestion-cobro">
+                <span class="has-text-primary">Total Articulos</span>
+                <span class="has-text-white">@ProductosCliente.Count </span>
+            </div>
+        </div>
+        @if (!estadoCobrado)
+        {
+            <div class="column p-0">
+                <div class="card-gestion-cobro">
+                    <span class="has-text-danger">PENDIENTE</span>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="column p-0">
+                <div class="card-gestion-cobro">
+                    <span class="has-text-success">COBRADO</span>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@if (estadoCobrado)
+{
+    <div class="section container">
+        <div class="card-cliente-cobrado">
+            <i class="fas fa-check-circle fa-3x has-text-primary"></i>
+            <div>
+                <h3 class="ml-2 subtitle is-6 has-text-white">Pagado hoy: $ @valorCobradoHoy</h3>
+            </div>
+            <div class="elemento-clicleable" @onclick="AbrirModalEliminar">
+                <i class="fas fa-trash-alt fa-2x has-text-danger"></i>
+            </div>
+            <div class="elemento-clicleable" @onclick="AbrirModalActualizar">
+                <i class="fas fa-edit fa-2x has-text-info"></i>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="section container">
+        <div class="columns is-mobile is-centered mt-4 alinear-centro">
+            <div class="column is-narrow">
+                <button class="button is-primary has-text-black" type="button" @onclick="(()=>AbrirModalRegistro(true))">Abonar a Todos</button>
+            </div>
+            <div class="columnis is-narrow">
+                <div class="card-gestion-cobro">
+                    <span class="has-text-primary">Cuota Total</span>
+                    <span class="has-text-white">$ @Cliente.ValorCuota</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <ListadoGenerico Listado="ProductosCliente">
+        <HayRegistros>
+            <CardProductoCliente Producto="context" IniciarAbonoUnitario="@(()=>AbrirModalRegistro(false, context.Id))">
+            </CardProductoCliente>
+        </HayRegistros>
+    </ListadoGenerico>
+}
+
+@code {
+    [Parameter] public int IdCliente { get; set; }
+    private ClienteDto Cliente = new ClienteDto();
+    private List<ProductosClienteDTO> ProductosCliente = new List<ProductosClienteDTO>();
+    private decimal? DeudaTotal = new decimal();
+    private bool estadoCobrado = default(bool);
+    private decimal? valorCobradoHoy = default(decimal);
+    public int IdProductoIndividualAbonar { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        await ConsultarCliente();
+    }
+
+    private async Task ConsultarCliente()
+    {
+        var responseHttp = await repositorio.Get<ResumenClienteProductosDTO>($"api/clientes/clienteProductos/{IdCliente}");
+        if (!responseHttp.Error)
+        {
+            ResumenClienteProductosDTO resumenCliente = responseHttp.Response;
+            Cliente = resumenCliente.ClienteDto;
+            ProductosCliente = resumenCliente.ProductosClienteDto;
+            DeudaTotal = resumenCliente.DeudaTotal;
+            estadoCobrado = resumenCliente.EstadoCobrado;
+            valorCobradoHoy = resumenCliente.ValorCobradoHoy;
+        }
+    }
+
+    private async Task AbrirModalRegistro(bool abonarTodos, int idProductoAbonar = 0)
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Registrar Cuota",
+                Text = "Ingresa el valor de la cuota",
+                Icon = SweetAlertIcon.Warning,
+                Input = SweetAlertInputType.Number,
+                AllowOutsideClick = false,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Registrar",
+                CancelButtonText = "Cancelar"
+            });
+
+
+        //! Agregar posteriormente un mensaje más de tallado en caso de error
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            bool resultadoRegistro = false;
+            if (abonarTodos)
+            {
+                resultadoRegistro = await RegistrarAbonoTodos(result.Value);
+            }
+            else
+            {
+                resultadoRegistro = await RegistrarAbonoUnitario(result.Value, idProductoAbonar);
+            }
+
+            if (resultadoRegistro)
+            {
+
+                //! Ver posibilidad de ejecutar las dos tareas a la vez
+                await Swal.FireAsync(
+                "Completado",
+                "El abono se ha registrado",
+                SweetAlertIcon.Success);
+
+                await ConsultarCliente();
+
+            }
+            else
+            {
+                await Swal.FireAsync(
+                "Error",
+                "Ha ocurrido un error al registrar",
+                SweetAlertIcon.Error);
+            }
+        }
+    }
+
+    private async Task AbrirModalActualizar()
+    {
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Actualizar Cuota",
+                Text = "Ingresa el valor de la cuota",
+                Icon = SweetAlertIcon.Warning,
+                Input = SweetAlertInputType.Number,
+                AllowOutsideClick = false,
+                ShowCancelButton = true,
+                ConfirmButtonText = "Registrar",
+                CancelButtonText = "Cancelar"
+            });
+
+        //! Agregar posteriormente un mensaje más de tallado en caso de error
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            bool resultadoRegistro = await ActualizarAbonoTodos(result.Value);
+
+            if (resultadoRegistro)
+            {
+                //! Ver posibilidad de ejecutar las dos tareas a la vez
+                await Swal.FireAsync(
+                "Completado",
+                "El abono se ha actualizado",
+                SweetAlertIcon.Success);
+
+                await ConsultarCliente();
+
+            }
+            else
+            {
+                await Swal.FireAsync(
+                "Error",
+                "Ha ocurrido un error al actualizar",
+                SweetAlertIcon.Error);
+            }
+        }
+    }
+
+    private async Task AbrirModalEliminar()
+    {
+
+        SweetAlertResult result = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Eliminar Cuota",
+                Text = "¿Deseas eliminar el abono?",
+                Icon = SweetAlertIcon.Question,
+                IconColor = "#00d1b2",
+                ShowCancelButton = true,
+                ConfirmButtonText = "Eliminar",
+                CancelButtonText = "Cancelar"
+            });
+
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            var resultado = await EliminarAbono();
+            if (resultado)
+            {
+                await Swal.FireAsync(
+                  "Eliminado",
+                  "Se ha eliminado la couta ",
+                  SweetAlertIcon.Success
+                  );
+            }else
+            {
+                  await Swal.FireAsync(
+                  "No Realizado",
+                  "No se ha eliminado el abono, verifica que no se ha entregado el cobro al administrador",
+                  SweetAlertIcon.Error
+                  );
+            }
+        }
+        else if (result.Dismiss == DismissReason.Cancel)
+        {
+            await Swal.FireAsync(
+              "Cancelado",
+              "No se ha eliminado la cuota",
+              SweetAlertIcon.Error
+              );
+        }
+    }
+
+    private async Task<bool> RegistrarAbonoTodos(string valorAbonoString)
+    {
+        decimal valorAbono = Convert.ToDecimal(valorAbonoString);
+        bool resultadoRegistro = false;
+
+        if (valorAbono > default(int))
+        {
+            AbonoDto abono = new AbonoDto()
+                {
+                    IdCliente = Cliente.Id,
+                    Valor = valorAbono
+                };
+
+            var httpResponse = await repositorio.Post<AbonoDto, bool>("api/Cobro/registrarAbonoTodos", abono);
+
+            if (!httpResponse.Error)
+            {
+                resultadoRegistro = httpResponse.Response;
+                await ConsultarCliente();
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(
+            "No registrado",
+            "El abono no puede ser un valor 0 o un número negativo",
+            SweetAlertIcon.Error);
+        }
+
+        return resultadoRegistro;
+    }
+
+    private async Task<bool> RegistrarAbonoUnitario(string valorAbonoString, int idProducto)
+    {
+        decimal valorAbono = Convert.ToDecimal(valorAbonoString);
+        bool resultadoRegistro = false;
+
+        if (valorAbono > default(int))
+        {
+            AbonoDto abono = new AbonoDto()
+                {
+                    IdCliente = Cliente.Id,
+                    Valor = valorAbono,
+                    IdProductoCliente = idProducto
+                };
+
+            var httpResponse = await repositorio.Post<AbonoDto, bool>("api/Cobro/registrarAbono", abono);
+
+            if (!httpResponse.Error)
+            {
+                resultadoRegistro = httpResponse.Response;
+            }
+
+        }
+        else
+        {
+            await Swal.FireAsync(
+            "No registrado",
+            "El abono no puede ser un valor 0 o un número negativo",
+            SweetAlertIcon.Error);
+        }
+
+        return resultadoRegistro;
+    }
+
+    private async Task<bool> ActualizarAbonoTodos(string valorString)
+    {
+        decimal valorAbono = Convert.ToDecimal(valorString);
+        bool resultadoRegistro = false;
+
+        if (valorAbono > default(int))
+        {
+            AbonoDto abono = new AbonoDto()
+                {
+                    IdCliente = Cliente.Id,
+                    Valor = valorAbono
+                };
+
+            var httpResponse = await repositorio.Post<AbonoDto, bool>("api/Cobro/actualizarAbonoTodos", abono);
+
+            if (!httpResponse.Error)
+            {
+                resultadoRegistro = httpResponse.Response;
+                await ConsultarCliente();
+            }
+        }
+        else
+        {
+            await Swal.FireAsync(
+            "No registrado",
+            "El abono no puede ser un valor 0 o un número negativo",
+            SweetAlertIcon.Error);
+        }
+
+        return resultadoRegistro;
+    }
+
+    private async Task<bool> EliminarAbono()
+    {
+        bool resultadoRegistro = false;
+        var httpResponse = await repositorio.Delete($"api/Cobro/eliminarAbono/{Cliente.Id}");
+
+        if (!httpResponse.Error)
+        {
+            resultadoRegistro = true;
+            await ConsultarCliente();
+        }
+
+        return resultadoRegistro;
+    }
+
+}

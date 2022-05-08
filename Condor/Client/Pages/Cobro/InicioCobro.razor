@@ -1,0 +1,99 @@
+﻿@page "/cobro/inicio"
+@inject NavigationManager navigation
+@inject IRepositorio repositorio
+@inject IJSRuntime JS
+
+<div class="container">
+    <div class="columns is-mobile is-multiline">
+        <div class="section container columns is-flex is-centered">
+            <div class="field has-addons">
+                <div class="control">
+                    <input class="input" type="text" placeholder="Nombre del cliente" @bind-value="ClienteBuscar">
+                </div>
+                <div class="control">
+                    <button class="button is-dark" @onclick="BuscarCliente">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="display: @MostrarListaClientes">
+        <TabControl>
+            <TabPage Text="Pendientes">
+                <ListadoGenerico Listado="ClientesPendientes">
+                    <HayRegistros>
+                        <CardClienteCobro Cliente="context" />
+                    </HayRegistros>
+                </ListadoGenerico>
+            </TabPage>
+            <TabPage Text="Cobrados">
+                <ListadoGenerico Listado="ClientesCobrados">
+                    <HayRegistros>
+                        <CardClienteCobro Cliente="context"/>
+                    </HayRegistros>
+                </ListadoGenerico>
+            </TabPage>
+            <TabPage Text="Todos">
+                <ListadoGenerico Listado="ClientesTodos">
+                    <HayRegistros>
+                        <CardClienteCobro Cliente="context"/>
+                    </HayRegistros>
+                </ListadoGenerico>
+            </TabPage>
+        </TabControl>
+    </div>
+    <div style="display: @MostrarListaBusqueda">
+        <ListadoGenerico Listado="ClientesFiltrados">
+            <HayRegistros>
+                <CardClienteCobro Cliente="context" />
+            </HayRegistros>
+        </ListadoGenerico>
+    </div>
+
+</div>
+@code {
+    public List<ClienteDto> ClientesPendientes = new List<ClienteDto>();
+    public List<ClienteDto> ClientesCobrados = new List<ClienteDto>();
+    public List<ClienteDto> ClientesTodos = new List<ClienteDto>();
+    public List<ClienteDto> ClientesFiltrados = new List<ClienteDto>();
+    private string ClienteBuscar = "";
+    private string MostrarListaClientes = "block";
+    private string MostrarListaBusqueda = "none";
+
+    protected async override Task OnInitializedAsync()
+    {
+        var responseHttp = await repositorio.Get<Tuple<IEnumerable<ClienteDto>, IEnumerable<ClienteDto>>>("api/clientes/clientesPendientes");
+        if (!responseHttp.Error)
+        {
+            if (responseHttp.Response.Item1.ToList().Count > default(int))
+            {
+                ClientesPendientes = responseHttp.Response.Item1.ToList();
+            }
+            if (responseHttp.Response.Item2.ToList().Count > default(int))
+            {
+                 ClientesCobrados = responseHttp.Response.Item2.ToList();
+            }
+
+            ClientesTodos.AddRange(ClientesPendientes);
+            ClientesTodos.AddRange(ClientesCobrados);
+            ClientesTodos.OrderBy(x => x.Nombre);
+        }
+    }
+
+    private void BuscarCliente()
+    {
+        ClientesFiltrados = new List<ClienteDto>();
+        if (!string.IsNullOrWhiteSpace(ClienteBuscar))
+        {
+            ClientesFiltrados.AddRange(ClientesTodos.Where(x => x.Nombre.ToLower().Contains(ClienteBuscar.ToLower())).ToList());
+            MostrarListaClientes = "none";
+            MostrarListaBusqueda = "block";
+        }
+        else
+        {
+            MostrarListaClientes = "block";
+            MostrarListaBusqueda = "none";
+        }
+    }
+}

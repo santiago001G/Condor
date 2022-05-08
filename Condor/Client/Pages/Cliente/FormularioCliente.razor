@@ -1,0 +1,141 @@
+﻿@inject NavigationManager navigator
+@inject IJSRuntime Js
+@inject IFileReaderService fileReader;
+
+@using BrowserInterop.Extensions
+@using BrowserInterop.Geolocation
+@using BrowserInterop
+@using Microsoft.AspNetCore.Components
+@using Tewr.Blazor.FileReader
+@using System.IO
+
+<EditForm Model="Cliente" OnValidSubmit="OnValidSubmit">
+    <div class="container section">
+        <div>
+            <div class="field">
+                <label class="label has-text-light">Nombre del cliente</label>
+                <div class="control">
+                    <InputText class="input" @bind-Value="@Cliente.Nombre" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="label has-text-light">Teléfono</label>
+                <div class="control">
+                    <InputText class="input" @bind-Value="@Cliente.Telefono" />
+                </div>
+            </div>
+            <div class="field">
+                <label class="label has-text-light">Dirección</label>
+                <div class="control">
+                    <InputText class="input" @bind-Value="@Cliente.Direccion" />
+                </div>
+            </div>
+            <div class="columns is-mobile">
+                <div class="column">
+                    <div class="field">
+                        <button type="button" class="button is-primary" @onclick="ObtenerLocalizacion">Obtener Ubicación</button>
+                    </div>
+                </div>
+                <div class="column">
+                    @if(Latitud == 0)
+                    {
+                        <label class="label has-text-danger" >Sin Ubicación</label>
+                    }
+                    else
+                    {
+                        <a href="@UrlUbicacionMapa" class="has-text-link" target="_blank">Ver en Maps</a>
+                    }
+                </div>
+            </div>
+
+            <div class="field">
+                <label class="label has-text-light">Foto</label>
+                <button class="button is-primary" type="button">
+                    <span class="icon">
+                        <i class="fas fa-camera"></i>
+                    </span>
+                    <span>Tomar Foto</span>
+                </button>
+
+                <input type="file" accept="image/*" @ref="elementReference" capture @onchange="HandleSelected"/>
+                <img src="@imgData" alt="Referencia Cliente"/>
+            </div>
+            <div class="field">
+                <label class="label has-text-light">Periodicidad Pago</label>
+                <div class="control">
+                    <div class="select is-fullwidth">
+                        <InputSelect @bind-Value="Cliente.PeridicidadCobro" class="select is-flex is-flex-direction-column">
+                            <option>--SELECCIONE--</option>
+                            <option value="DIARIO">Diario</option>
+                            <option value="SEMANAL">Semanal</option>
+                        </InputSelect>
+                    </div>
+                </div>
+            </div>
+            <div class="field">
+                <label class="label has-text-light">Anotaciones</label>
+                <div class="control">
+                    <InputTextArea class="textarea" @bind-Value="Cliente.Descripcion" />
+                </div>
+            </div>
+            <button class="button is-primary is-pulled-right" type="submit">Registrar Cliente</button>
+        </div>
+    </div>
+
+</EditForm>
+
+@code {
+    [Parameter] public ClienteDto Cliente { get; set; }
+    [Parameter] public EventCallback OnValidSubmit { get; set; }
+
+    public double Latitud = 0;
+    public double Longitud = 0;
+    private string UrlUbicacionMapa = "";
+    ElementReference elementReference;
+    string imgData = "";
+
+    private async Task ObtenerLocalizacion()
+    {
+        WindowNavigatorGeolocation geolocation;
+        GeolocationPosition geolocationPosition;
+
+        var window = await Js.Window();
+        var navigator = await window.Navigator();
+        geolocation = navigator.Geolocation;
+
+        geolocationPosition = (await geolocation.GetCurrentPosition(new PositionOptions()
+            {
+                EnableHighAccuracy = true,
+                MaximumAgeTimeSpan = TimeSpan.FromHours(1),
+                TimeoutTimeSpan = TimeSpan.FromMinutes(1)
+            })).Location;
+
+        Latitud = geolocationPosition.Coords.Latitude;
+        Longitud = geolocationPosition.Coords.Longitude;
+
+        string latitudStr = Convert.ToString(Latitud);
+        string longitudStr = Convert.ToString(Longitud);
+
+        latitudStr = latitudStr.Replace(",", ".");
+        longitudStr = longitudStr.Replace(",", ".");
+        UrlUbicacionMapa = $"https://maps.google.com/?q={latitudStr},{longitudStr}";
+
+        Cliente.Latitud = latitudStr;
+        Cliente.Logitud = longitudStr;
+
+    }
+
+    async Task HandleSelected()
+    {
+        var file = (await fileReader.CreateReference(elementReference).EnumerateFilesAsync()).FirstOrDefault();
+        var fileInfo = await file.ReadFileInfoAsync();
+
+        using(var ms = await file.CreateMemoryStreamAsync((int)fileInfo.Size))
+        {
+            var inputStream = new MemoryStream(ms.ToArray());
+            var result = Convert.ToBase64String(inputStream.ToArray());
+            imgData = $"data:{fileInfo.Type};base64{result}";
+        }
+    }
+
+}

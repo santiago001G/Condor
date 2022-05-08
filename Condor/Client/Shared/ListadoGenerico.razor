@@ -1,0 +1,45 @@
+﻿@typeparam TypeItem
+@if (Listado == null)
+{
+    @if (Cargando == null)
+    {
+        <span>Cargando....</span>
+    }
+    else
+    {
+        @Cargando
+    }
+}
+else if (Listado.Count == default(int))
+{
+    @if (NoHayRegistros == null)
+    {
+        <span>No hay registros para mostrar</span>
+    }
+    else
+    {
+        @NoHayRegistros
+    }
+}
+else
+{
+    if (HayRegistros != null)
+    {
+        foreach (var item in Listado)
+        {
+            @HayRegistros(item)
+        }
+    }
+    else
+    {
+        @HayRegistrosCompleto
+    }
+
+}
+@code {
+    [Parameter] public RenderFragment Cargando { get; set; }
+    [Parameter] public RenderFragment NoHayRegistros { get; set; }
+    [Parameter] public RenderFragment<TypeItem> HayRegistros { get; set; }
+    [Parameter] public RenderFragment HayRegistrosCompleto { get; set; }
+    [Parameter] public List<TypeItem> Listado { get; set; }
+}

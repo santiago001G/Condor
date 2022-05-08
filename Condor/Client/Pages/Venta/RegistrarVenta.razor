@@ -1,0 +1,168 @@
+﻿@page "/venta/registrar/{IdCliente:int}"
+
+@inject IRepositorio repositorio;
+@inject SweetAlertService Swal;
+
+@if (Cliente != null)
+{
+    <div class="container section">
+        <h1 class="title is-5 has-text-light">@Cliente.Nombre</h1>
+        <h1 class="subtitle has-text-light">@Cliente.Telefono</h1>
+        <h1 class="subtitle has-text-light">@Cliente.PeridicidadCobro</h1>
+    </div>
+
+    <div class="container section">
+        <TabControl>
+            <TabPage Text="Producto">
+                <FormularioAgregarArticulo Mercaderias="Mercaderias" Categorias="CategoriasMercaderia" AgregarItem="@((args) => AgregarItem(args.Item1,args.Item2))" />
+            </TabPage>
+            <TabPage Text="Resumen">
+                @if (ListaProductosResumen.Count > default(int))
+                {
+                    <ListadoGenerico Listado="ListaProductosResumen">
+                        <HayRegistros>
+                            <CardListaProductoAgregado ProductoAgregado="context" Eliminar="@EliminarItem" IdEliminar="context.Id" />
+                        </HayRegistros>
+                    </ListadoGenerico>
+                    <div class="is-flex is-justify-content-center is-align-items-center p-2 mb-3 caja-info-pago-total">
+                        <h1 class="title is-4 has-text-primary">Sub Total $@MontoTotalVenta</h1>
+                    </div>
+                    <EditForm Model="@Modelo" OnValidSubmit="Registrar">
+                        <DataAnnotationsValidator />
+                        <div class="field">
+                            <label class="label has-text-light">Inicial</label>
+                            <div class="control">
+                                <InputNumber class="input" @bind-Value="Modelo.CuotaInicial" />
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="label has-text-light">Valor Cuota</label>
+                            <div class="control">
+                                <InputNumber class="input" @bind-Value="Modelo.ValorCuota" />
+                                <ValidationMessage For="@(() => Modelo.ValorCuota)" class="has-text-danger" />
+                            </div>
+                        </div>
+                        <div class="is-flex is-justify-content-center is-align-items-center p-2 mb-3 caja-info-pago-total">
+                            <h1 class="title is-4 has-text-primary">Total $@MontoTotalVenta</h1>
+                        </div>
+                        <button class="button is-primary mt-4" type="button" @onclick="Registrar">Registrar Venta</button>
+                    </EditForm>
+                }
+                else
+                {
+                    <div class="is-flex is-justify-content-center is-align-items-center">
+                        <h1 class="subtitle has-text-light">Aún no hay articulos agregados</h1>
+                    </div>
+                }
+            </TabPage>
+        </TabControl>
+    </div>
+}
+else
+{
+    <div class="is-flex is-justify-content-center is-align-items-center">
+        <h1 class="subtitle has-text-light">No ha sido posible consultar el cliente, por favor recarga la página</h1>
+    </div>
+}
+
+
+@code {
+    [Parameter] public int IdCliente { get; set; }
+
+    private ClienteDto Cliente = new ClienteDto();
+    private List<ProductosClienteDTO> ListaProductosAgregados = new List<ProductosClienteDTO>();
+    private List<MercaderiaDto> Mercaderias = new List<MercaderiaDto>();
+    private List<CategoriaMercaderiaDTO> CategoriasMercaderia = new List<CategoriaMercaderiaDTO>();
+    private List<ResumenProductosViewModel> ListaProductosResumen = new List<ResumenProductosViewModel>();
+    private decimal MontoTotalVenta = default(int);
+
+    private int contadorItems = default(int);
+
+    private RegistroVentaDTO Modelo = new RegistroVentaDTO();
+
+    protected async override Task OnInitializedAsync()
+    {
+        await ConsultarClienteVenta();
+
+        Mercaderias.Add(new MercaderiaDto() { Id = 1, IdCategoria = 1, Nombre = "Sabanas", PrecioVenta = 120 });
+        Mercaderias.Add(new MercaderiaDto() { Id = 2, IdCategoria = 2, Nombre = "Bafle", PrecioVenta = 150 });
+        Mercaderias.Add(new MercaderiaDto() { Id = 3, IdCategoria = 2, Nombre = "Ventilador", PrecioVenta = 160 });
+
+        CategoriasMercaderia.Add(new CategoriaMercaderiaDTO() { Id = 1, Nombre = "Sabanas" });
+        CategoriasMercaderia.Add(new CategoriaMercaderiaDTO() { Id = 2, Nombre = "Electrodomesticos" });
+    }
+
+    private async Task ConsultarClienteVenta()
+    {
+        var responseHttp = await repositorio.Get<ClienteDto>($"api/clientes/{IdCliente}");
+
+        if (!responseHttp.Error)
+        {
+            ClienteDto clienteConsulta = responseHttp.Response;
+            Cliente = clienteConsulta;
+        }
+    }
+
+    public async Task AgregarItem(int idItem, int cantidadItem)
+    {
+        if (idItem > default(int) && cantidadItem > default(int))
+        {
+            var mercaderiaDatos = Mercaderias.FirstOrDefault(x => x.Id == idItem);
+
+            for (var i = 0; i < cantidadItem; i++)
+            {
+                ListaProductosAgregados.Add(new ProductosClienteDTO()
+                    {
+                        IdMercaderia = idItem,
+                        NombreProducto = mercaderiaDatos.Nombre
+                    });
+            }
+
+            ListaProductosResumen.Add(new ResumenProductosViewModel()
+                {
+                    Id = contadorItems++,
+                    NombreProducto = mercaderiaDatos.Nombre,
+                    CantidadProductos = cantidadItem,
+                    ValorTotal = (mercaderiaDatos.PrecioVenta.Value * cantidadItem)
+                });
+
+            MontoTotalVenta += mercaderiaDatos.PrecioVenta.Value * cantidadItem;
+
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Producto Agregado",
+                    Icon = SweetAlertIcon.Success,
+                    Toast = true,
+                    ShowConfirmButton = false,
+                    Timer = 800,
+                    Position = "bottom"
+                });
+        }
+        else
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "No Agregado",
+                    Text = "Verifica que la cantidad de productos sea mayor que 0 y esté seleccionado un artículo",
+                    Icon = SweetAlertIcon.Error,
+                    CancelButtonText = "Cerrar"
+                });
+        }
+    }
+
+    private void EliminarItem(int idItemEliminar)
+    {
+        var item = ListaProductosResumen.FirstOrDefault(x => x.Id == idItemEliminar);
+        if (item != null)
+        {
+            MontoTotalVenta -= item.ValorTotal;
+            ListaProductosResumen.Remove(item);
+        }
+    }
+
+    private void Registrar()
+    {
+        Console.WriteLine("Ejecutando el metodo registrar");
+    }
+
+}

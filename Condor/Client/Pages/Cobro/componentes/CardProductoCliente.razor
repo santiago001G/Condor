@@ -1,0 +1,26 @@
+﻿<div class="section container pt-0 pb-1">
+    <div class="card-info-producto-cliente">
+        <div>
+            <span class="is-size-6 has-text-grey-lighter">Artículo</span>
+        </div>
+        <div class="is-flex is-justify-content-center">
+            <span class="has-text-grey-lighter">Cuota</span>
+        </div>
+        <div class="is-flex is-align-items-center">
+            <h2 class="title is-5 has-text-light">@Producto.NombreProducto</h2>
+        </div>
+        <div class="is-flex is-justify-content-center is-align-items-center">
+            <span class="has-text-light">$ @Producto.ValorCuota</span>
+        </div>
+        <div>
+            <span class="has-text-info texto-clicleable">Historial Pagos</span>
+        </div>
+        <div class="is-flex is-justify-content-center">
+            <span class="has-text-primary texto-clicleable" @onclick="IniciarAbonoUnitario">Abonar</span>
+        </div>
+    </div>
+</div>
+@code {
+    [Parameter] public ProductosClienteDTO Producto {get;set;}
+    [Parameter] public EventCallback IniciarAbonoUnitario { get; set; }
+}

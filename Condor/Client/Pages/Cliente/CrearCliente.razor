@@ -1,0 +1,55 @@
+﻿@page "/cliente/crear"
+@inject NavigationManager navigator
+@inject IRepositorio repositorio;
+@inject SweetAlertService Swal;
+
+<h1 class="title is-5 has-text-white"> Registro de cliente</h1>
+
+<FormularioCliente OnValidSubmit="RegistrarCliente" Cliente="Cliente" />
+
+@code {
+    private ClienteDto Cliente = new ClienteDto();
+
+    private async Task RegistrarCliente()
+    {
+        var httpResponse = await repositorio.Post<ClienteDto, int>("api/Clientes", Cliente);
+
+        if (!httpResponse.Error)
+        {
+            int idClienteRegistrado = httpResponse.Response;
+
+            if (idClienteRegistrado > default(int))
+            {
+                await MostrarMensaje(default(string), false);
+
+                navigator.NavigateTo($"venta/registrar/{idClienteRegistrado}");
+            }
+            else
+            {
+                await MostrarMensaje("El registro no se ha podido realizar, verifica la información del registro", true);
+            }
+        }
+        else
+        {
+            await MostrarMensaje("El registro no se ha podido realizar, verifica que haya conexión a internet", true);
+        }
+    }
+
+    private async Task MostrarMensaje(string mensaje, bool esError)
+    {
+        if (esError)
+        {
+            await Swal.FireAsync(
+               "No registrado",
+               mensaje,
+               SweetAlertIcon.Error);
+        }
+        else
+        {
+            await Swal.FireAsync(
+               "Registro Exitoso",
+               "Se ha registrado el cliente",
+               SweetAlertIcon.Success);
+        }
+    }
+}

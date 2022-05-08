@@ -1,0 +1,22 @@
+﻿
+<div class="card-resumen-venta mb-5 pt-2 pb-2">
+    <span class="subtitle mb-0 has-text-info">@ProductoAgregado.NombreProducto</span>
+    <span class="mb-0 has-text-white">Cantidad: @ProductoAgregado.CantidadProductos</span>
+    <span class="mb-0 has-text-white">Precio Venta: @ProductoAgregado.ValorTotal</span>
+    <div class="card-resumen-venta-icono is-flex is-justify-content-center is-align-items-center">
+        <div @onclick="EliminarItem">
+            <i class="fas fa-trash-alt fa-2x has-text-danger is-clickable"></i>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public ResumenProductosViewModel ProductoAgregado { get; set; }
+    [Parameter] public EventCallback<int> Eliminar { get; set; }
+    [Parameter] public int IdEliminar { get; set; }
+
+    private async Task EliminarItem()
+    {
+        await Eliminar.InvokeAsync(IdEliminar);
+    }
+}
